@@ -10,7 +10,7 @@ Tags: [[Cloud Systems]]
 	2. run the install.sh script
 	3. run `gcloud init`
 2. The closest Google Cloud zone to London is `europe-west2-a`
-3. we need to make sure we have the necessary permissions (compute.admin). See section [[#Creating a service account key]]
+3. we need to make sure we have the necessary permissions (compute.admin). See section [Creating a service account key](#creating-a-service-account-key)
 
 ### Useful commands
 * `gcloud compute instances --help`: get man for gcloud compute instances or refer to [help docs](https://cloud.google.com/compute/docs/instances/) 
@@ -18,7 +18,9 @@ Tags: [[Cloud Systems]]
 * `gcloud compute instances create-with-container`
 
 ## Tips
-* we can always go in the [create instance console ui] and press on "<> Equivalent Code" to get the code to create it ![[Pasted image 20250121230541.png]]
+* we can always go in the "create instance console" UI and press on "<> Equivalent Code" to get the code to create it 
+<img src="tip-image.png" onerror="this.onerror=null;this.src='https://gla-my.sharepoint.com/:i:/g/personal/3059173g_student_gla_ac_uk/EX-ZLXP7GKRPhDONVf4hc7IBFzuNAAqXirjqAtsww46DQg?e=mOcGP5';" alt="Logo">
+
 
 ## Managing instances with python
 for new project:

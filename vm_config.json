@@ -1,0 +1,147 @@
+{
+  "canIpForward": false,
+  "confidentialInstanceConfig": {
+    "enableConfidentialCompute": false
+  },
+  "cpuPlatform": "Intel Cascade Lake",
+  "creationTimestamp": "2025-01-22T02:55:59.060-08:00",
+  "deletionProtection": false,
+  "description": "",
+  "disks": [
+    {
+      "architecture": "X86_64",
+      "guestOsFeatures": [
+        {
+          "type": "UEFI_COMPATIBLE"
+        },
+        {
+          "type": "VIRTIO_SCSI_MULTIQUEUE"
+        },
+        {
+          "type": "GVNIC"
+        },
+        {
+          "type": "SEV_CAPABLE"
+        },
+        {
+          "type": "SEV_LIVE_MIGRATABLE_V2"
+        }
+      ],
+      "type": "PERSISTENT",
+      "licenses": ["projects/debian-cloud/global/licenses/debian-12-bookworm"],
+      "deviceName": "instance-20250122-104619",
+      "autoDelete": true,
+      "source": "projects/cs-lab2/zones/europe-west2-b/disks/instance-20250122-104619",
+      "index": 0,
+      "boot": true,
+      "kind": "compute#attachedDisk",
+      "mode": "READ_WRITE",
+      "interface": "SCSI",
+      "diskSizeGb": "10"
+    },
+    {
+      "type": "PERSISTENT",
+      "deviceName": "disk-1",
+      "autoDelete": false,
+      "source": "projects/cs-lab2/zones/europe-west2-b/disks/disk-1",
+      "index": 1,
+      "boot": false,
+      "kind": "compute#attachedDisk",
+      "mode": "READ_WRITE",
+      "interface": "SCSI",
+      "diskSizeGb": "100"
+    }
+  ],
+  "displayDevice": {
+    "enableDisplay": false
+  },
+  "fingerprint": "zEu6VdqSbyE=",
+  "id": "1834848278642782291",
+  "keyRevocationActionType": "NONE",
+  "kind": "compute#instance",
+  "labelFingerprint": "42WmSpB8rSM=",
+  "lastStartTimestamp": "2025-01-22T04:23:54.448-08:00",
+  "lastStopTimestamp": "2025-01-22T04:11:19.277-08:00",
+  "lastSuspendedTimestamp": "2025-01-22T04:12:31.245-08:00",
+  "machineType": "projects/cs-lab2/zones/europe-west2-b/machineTypes/n2-standard-2",
+  "metadata": {
+    "fingerprint": "JK5BJTk-Wfo=",
+    "kind": "compute#metadata",
+    "items": [
+      {
+        "value": "derick_gag46:ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBN55Eza6+BgiMGCxC1P0gkdMLpPU+RvaNJBIPCM9q6yb4Sd+1ZD47kFdXWTpnP9dwC3jzjYtopa5vaFJjL7xbE= google-ssh {\"userName\":\"derick.gag46@gmail.com\",\"expireOn\":\"2025-01-22T10:59:52+0000\"}\nderick_gag46:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCDACy+ThADBgMtqgihQTEcz10iqeo1nsu8tvQ0c+5j4LdV8vo1gRQNYVqZPDSubgMmtxdn1xU7fSRZ1ijS83Uxf8lIo5xE6KGMgYvAb3701VEkQSirMQCH4t5nmxBbdN2URTBnY9lIt9RVbrACo81yrQ37YOxaBLhJbwO0dICZcAf2lld8W+rikmbcA+Kgh6D3YdK/XVfl64hxgr/ANwRM3VfFILKUq2A88e5hWve+YDrq2qdNNK5Vg7/H3OPCmqrtZkFOzRO/F8xBFM2tWpXp9YX8f2xiouNyVr6MTuLN4mzK4CiR3Oy1x5YD/E7ikhMWvd1XLSMg61i8FgbBAC0R google-ssh {\"userName\":\"derick.gag46@gmail.com\",\"expireOn\":\"2025-01-22T10:59:55+0000\"}",
+        "key": "ssh-keys"
+      }
+    ]
+  },
+  "name": "instance-20250122-104619",
+  "networkInterfaces": [
+    {
+      "stackType": "IPV4_ONLY",
+      "name": "nic0",
+      "network": "projects/cs-lab2/global/networks/default",
+      "accessConfigs": [
+        {
+          "name": "External NAT",
+          "type": "ONE_TO_ONE_NAT",
+          "natIP": "34.105.209.183",
+          "kind": "compute#accessConfig",
+          "networkTier": "PREMIUM"
+        }
+      ],
+      "subnetwork": "projects/cs-lab2/regions/europe-west2/subnetworks/default",
+      "networkIP": "10.154.0.2",
+      "fingerprint": "1JYKWsXQv6s=",
+      "kind": "compute#networkInterface"
+    }
+  ],
+  "reservationAffinity": {
+    "consumeReservationType": "ANY_RESERVATION"
+  },
+  "resourceStatus": {
+    "scheduling": {}
+  },
+  "satisfiesPzi": true,
+  "scheduling": {
+    "onHostMaintenance": "MIGRATE",
+    "provisioningModel": "STANDARD",
+    "automaticRestart": true,
+    "preemptible": false
+  },
+  "selfLink": "projects/cs-lab2/zones/europe-west2-b/instances/instance-20250122-104619",
+  "serviceAccounts": [
+    {
+      "email": "490729708489-compute@developer.gserviceaccount.com",
+      "scopes": [
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/logging.write",
+        "https://www.googleapis.com/auth/monitoring.write",
+        "https://www.googleapis.com/auth/service.management.readonly",
+        "https://www.googleapis.com/auth/servicecontrol",
+        "https://www.googleapis.com/auth/trace.append"
+      ]
+    }
+  ],
+  "shieldedInstanceConfig": {
+    "enableSecureBoot": false,
+    "enableVtpm": true,
+    "enableIntegrityMonitoring": true
+  },
+  "shieldedInstanceIntegrityPolicy": {
+    "updateAutoLearnPolicy": true
+  },
+  "shieldedVmConfig": {
+    "enableSecureBoot": false,
+    "enableVtpm": true,
+    "enableIntegrityMonitoring": true
+  },
+  "shieldedVmIntegrityPolicy": {
+    "updateAutoLearnPolicy": true
+  },
+  "startRestricted": false,
+  "status": "RUNNING",
+  "tags": {
+    "fingerprint": "42WmSpB8rSM="
+  },
+  "zone": "projects/cs-lab2/zones/europe-west2-b"
+}
