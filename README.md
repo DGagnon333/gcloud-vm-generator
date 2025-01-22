@@ -27,11 +27,14 @@
 - Access to Google Cloud Console with compute.admin permissions
 - SSH key pair for VM access
 
-## Running the script
-Simply run (python3 for mac):
+## Running the program
+1. Make sure you're defaults like region and project are setup, refer to [Google Cloud Setup](#google-cloud-setup)
+2. Run the script (python3 for mac:
 ```python
 python manage_vm.py
 ```
+
+> NOTE: only use the interactive approach. Creating an instance using a json file still needs some corrections
 
 ## Google Cloud Setup
 
