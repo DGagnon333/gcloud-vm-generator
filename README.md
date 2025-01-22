@@ -4,11 +4,7 @@
 - [Lab 2 - Virtual Machines Setup and Configuration](#lab-2---virtual-machines-setup-and-configuration)
   - [Table of Contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
-  - [Running the script](#running-the-script)
   - [Google Cloud Setup](#google-cloud-setup)
-  - [Instance Creation](#instance-creation)
-    - [Console UI Method](#console-ui-method)
-    - [Programmatic Method](#programmatic-method)
   - [SSH Configuration](#ssh-configuration)
     - [Quick Setup](#quick-setup)
     - [Manual Setup](#manual-setup)
@@ -44,31 +40,22 @@ python manage_vm.py
    - Execute `gcloud init`
 
 2. Configure project settings:
-   - Default zone: `europe-west2-a` (closest to London)
-   - Ensure compute.admin permissions are granted for running instances of other projects
+   - Set default region: `europe-west2-a` (closest to London)
+     ```bash
+     gcloud config set compute/region europ-west2
+     ```
+   - Set default region (optional)
+     Configure Google Cloud authentication:
+    ```bash
+    gcloud auth application-default login
+    gcloud config set project cs-lab2
+    ```
    - Verify project access:
      ```bash
      gcloud config list --format="value(core.project)"
      ```
 
-3. Tips for Instance Creation:
-   - Use the Google Cloud Console UI's "Equivalent Code" feature to generate commands
-   - Access this by clicking "<> Equivalent Code" in the instance creation interface
 
-Set up your local environment:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install google-cloud-compute
-```
-
-2. Configure Google Cloud authentication:
-```bash
-gcloud auth application-default login
-gcloud config set project cs-lab2
-```
-
-The Python script was created following the Google Cloud documentation [here](https://cloud.google.com/compute/docs/instances/create-vm-from-instance-template) for VM creation from templates.
 
 ## SSH Configuration
 
@@ -146,6 +133,10 @@ The benchmark can be run with different thread counts (1, 2, 4) to test multi-co
 - For new projects, ensure proper IAM permissions are configured
 - The closest Google Cloud zone to London is europe-west2-a
 
+-  Tips for Instance Creation:
+   - Use the Google Cloud Console UI's "Equivalent Code" feature to generate commands
+   - Access this by clicking "<> Equivalent Code" in the instance creation interface
+
 ## Useful Commands
 
 ```bash
@@ -167,3 +158,4 @@ gcloud config set project PROJECT_ID  # Set project
 - [Machine Family Resource Guide](https://cloud.google.com/compute/docs/machine-resource)
 - [Sysbench Documentation](https://github.com/akopytov/sysbench)
 - [Google Cloud SDK Installation Guide](https://cloud.google.com/sdk/docs/install)
+- [Google Cloud documentation](https://cloud.google.com/compute/docs/instances/create-vm-from-instance-template)
