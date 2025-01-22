@@ -55,20 +55,7 @@ python manage_vm.py
    - Use the Google Cloud Console UI's "Equivalent Code" feature to generate commands
    - Access this by clicking "<> Equivalent Code" in the instance creation interface
 
-## Instance Creation
-
-### Console UI Method
-
-1. Navigate to the [Google Cloud Console Instance Creation page](https://console.cloud.google.com/compute/instancesAdd)
-2. Configure the following settings:
-   - Region: europe-west2 (London)
-   - Machine type: n2d-standard-2
-   - Tag: cloud-systems
-   - Storage: 100GB disk
-
-### Programmatic Method
-
-1. Set up your local environment:
+Set up your local environment:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -81,7 +68,7 @@ gcloud auth application-default login
 gcloud config set project cs-lab2
 ```
 
-3. The Python script was created following the Google Cloud documentation [here](https://cloud.google.com/compute/docs/instances/create-vm-from-instance-template) for VM creation from templates.
+The Python script was created following the Google Cloud documentation [here](https://cloud.google.com/compute/docs/instances/create-vm-from-instance-template) for VM creation from templates.
 
 ## SSH Configuration
 
