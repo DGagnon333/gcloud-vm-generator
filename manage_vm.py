@@ -1,190 +1,148 @@
-import json
 import sys
-from typing import Any, Optional
+import uuid
+import json
+from typing import Optional
 from google.api_core.extended_operation import ExtendedOperation
 from google.cloud import compute_v1
+from google.auth.exceptions import DefaultCredentialsError
+from tqdm import tqdm
+import time  # For simulating progress in this example
 
 
 def wait_for_extended_operation(
     operation: ExtendedOperation, verbose_name: str = "operation", timeout: int = 300
-) -> Any:
-    """
-    Waits for the extended (long-running) operation to complete.
-    """
+):
     result = operation.result(timeout=timeout)
-
     if operation.error_code:
-        print(
-            f"Error during {verbose_name}: [Code: {operation.error_code}]: {operation.error_message}",
-            file=sys.stderr,
-            flush=True,
-        )
-        print(f"Operation ID: {operation.name}", file=sys.stderr, flush=True)
-        raise operation.exception() or RuntimeError(operation.error_message)
-
+        raise RuntimeError(f"Error during {verbose_name}: {operation.error_message}")
     if operation.warnings:
-        print(f"Warnings during {verbose_name}:\n", file=sys.stderr, flush=True)
-        for warning in operation.warnings:
-            print(f" - {warning.code}: {warning.message}", file=sys.stderr, flush=True)
-
+        print(f"Warnings during {verbose_name}: {operation.warnings}", file=sys.stderr)
     return result
 
 
-def prompt_user_input(prompt: str, default: Optional[str] = None) -> str:
-    """
-    Prompts the user for input and returns their response.
-    If the user provides no input, returns the default value.
-    """
-    if default:
-        prompt = f"{prompt} [Default: {default}]: "
-    response = input(prompt).strip()
-    return response or default
-
-
-def create_instance_interactively():
-    """
-    Prompts the user for instance configuration details to create a VM.
-    """
-    project_id = prompt_user_input("Enter your Google Cloud project ID:")
-    zone = prompt_user_input("Enter the zone for the instance:", "europe-west2")
-    instance_name = prompt_user_input("Enter the name for the instance:")
-    machine_type = prompt_user_input(
-        f"Enter the machine type (e.g., n2-standard-2):", "n2-standard-2"
-    )
-    add_disk = prompt_user_input(
-        "Do you want to add an additional disk? (yes/no):", "no"
-    ).lower() == "yes"
-
-    disk_size_gb = None
-    if add_disk:
-        disk_size_gb = int(
-            prompt_user_input("Enter the size of the additional disk in GB:", "100")
-        )
-
-    create_instance(
-        project_id=project_id,
-        zone=zone,
-        instance_name=instance_name,
-        machine_type=machine_type,
-        additional_disk_size=disk_size_gb,
-    )
-
-
-def create_instance(
-    project_id: str,
-    zone: str,
-    instance_name: str,
-    machine_type: str,
-    additional_disk_size: Optional[int] = None,
-):
-    """
-    Creates a Compute Engine VM instance with the specified configuration.
-    """
-    instance_client = compute_v1.InstancesClient()
-
-    instance = compute_v1.Instance()
-    instance.name = instance_name
-    instance.machine_type = f"zones/{zone}/machineTypes/{machine_type}"
-
-    # Configure a boot disk
-    boot_disk = compute_v1.AttachedDisk()
-    boot_disk.initialize_params = compute_v1.AttachedDiskInitializeParams()
-    boot_disk.initialize_params.source_image = (
-        "projects/debian-cloud/global/images/family/debian-12"
-    )
-    boot_disk.initialize_params.disk_size_gb = 10
-    boot_disk.boot = True
-    boot_disk.auto_delete = True
-    instance.disks = [boot_disk]
-
-    # Configure additional disk if specified
-    if additional_disk_size:
-        additional_disk = compute_v1.AttachedDisk()
-        additional_disk.initialize_params = compute_v1.AttachedDiskInitializeParams()
-        additional_disk.initialize_params.disk_size_gb = additional_disk_size
-        additional_disk.boot = False
-        additional_disk.auto_delete = True
-        instance.disks.append(additional_disk)
-
-    # Configure network interface
-    network_interface = compute_v1.NetworkInterface()
-    network_interface.name = "nic0"
-    network_interface.network = f"projects/{project_id}/global/networks/default"
-    network_interface.access_configs = [
-        compute_v1.AccessConfig(name="External NAT", type_="ONE_TO_ONE_NAT")
-    ]
-    instance.network_interfaces = [network_interface]
-
-    # Insert the instance
-    instance_insert_request = compute_v1.InsertInstanceRequest(
-        project=project_id, zone=zone, instance_resource=instance
-    )
-    operation = instance_client.insert(instance_insert_request)
-    wait_for_extended_operation(operation, "instance creation")
-
-    print(f"Instance {instance_name} created successfully.")
-
-
-def create_instance_from_json(project_id: str, zone: str, json_file_path: str):
-    """
-    Creates a Compute Engine VM instance based on the configuration in a JSON file.
-    """
+def create_instance_from_json(project_id, zone, json_file_path):
+    """Create an instance from a JSON configuration."""
     with open(json_file_path, "r") as f:
-        vm_config = json.load(f)
+        instance_config = json.load(f)  # Parse the JSON content
 
     instance_client = compute_v1.InstancesClient()
-
-    instance = compute_v1.Instance()
-    instance.name = vm_config["name"]
-    instance.machine_type = vm_config["machineType"]
-    instance.can_ip_forward = vm_config.get("canIpForward", False)
-    instance.description = vm_config.get("description", "")
-
-    instance.disks = []
-    for disk_config in vm_config["disks"]:
-        disk = compute_v1.AttachedDisk()
-        disk.type_ = disk_config["type"]
-        disk.boot = disk_config["boot"]
-        disk.auto_delete = disk_config["autoDelete"]
-        disk.device_name = disk_config["deviceName"]
-        disk.initialize_params = compute_v1.AttachedDiskInitializeParams()
-        disk.initialize_params.disk_size_gb = int(disk_config["diskSizeGb"])
-        if "source" in disk_config:
-            disk.source = disk_config["source"]
-        instance.disks.append(disk)
-
-    instance.network_interfaces = []
-    for network_config in vm_config["networkInterfaces"]:
-        network_interface = compute_v1.NetworkInterface()
-        network_interface.name = network_config["name"]
-        network_interface.network = network_config["network"]
-        if "subnetwork" in network_config:
-            network_interface.subnetwork = network_config["subnetwork"]
-        if "accessConfigs" in network_config:
-            network_interface.access_configs = [
-                compute_v1.AccessConfig(**ac) for ac in network_config["accessConfigs"]
-            ]
-        instance.network_interfaces.append(network_interface)
-
-    instance_insert_request = compute_v1.InsertInstanceRequest(
-        project=project_id, zone=zone, instance_resource=instance
+    request = compute_v1.InsertInstanceRequest(
+        project=project_id,
+        zone=zone,
+        instance_resource=compute_v1.Instance.from_json(json.dumps(instance_config)),
     )
-    operation = instance_client.insert(instance_insert_request)
+    operation = instance_client.insert(request=request)
     wait_for_extended_operation(operation, "instance creation")
+    print(f"Instance created successfully in project '{project_id}' and zone '{zone}'.")
 
-    print(f"Instance {instance.name} created successfully.")
+
+def get_default_project_id():
+    """Retrieve the default project ID from gcloud configuration."""
+    from subprocess import check_output
+    try:
+        return check_output(["gcloud", "config", "get-value", "project"], text=True).strip()
+    except Exception as e:
+        raise RuntimeError("Failed to retrieve default project from gcloud.") from e
+
+
+def get_default_zone():
+    """Retrieve the default zone from gcloud configuration."""
+    from subprocess import check_output
+    try:
+        return check_output(["gcloud", "config", "get-value", "compute/zone"], text=True).strip()
+    except Exception as e:
+        print("Default zone not found in gcloud configuration. Listing all zones instead.")
+        return None
+
+
+def list_zones(project_id):
+    """List all available zones for the given project."""
+    compute_client = compute_v1.ZonesClient()
+    return [zone.name for zone in compute_client.list(project=project_id)]
+
+
+def generate_default_instance_name():
+    """Generate a default instance name using a GUID."""
+    return f"instance-from-script-{uuid.uuid4().hex[:8]}"
+
+
+def create_instance_interactively(project_id, zone):
+    """Interactively create an instance."""
+    instance_name = input("Enter instance name (leave blank for default): ") or generate_default_instance_name()
+    print(f"Using instance name: {instance_name}")
+
+    disk_size = input("Enter additional disk size in GB (leave blank for none): ").strip()
+    disk_size = int(disk_size) if disk_size else None
+
+    instance_config = {
+        "name": instance_name,
+        "machineType": f"zones/{zone}/machineTypes/n1-standard-1",
+        "disks": [
+            {
+                "boot": True,
+                "initializeParams": {
+                    "sourceImage": "projects/debian-cloud/global/images/family/debian-12",
+                },
+            }
+        ],
+        "networkInterfaces": [
+            {
+                "network": "global/networks/default",
+                "accessConfigs": [{"type": "ONE_TO_ONE_NAT", "name": "External NAT"}],
+            }
+        ],
+    }
+
+    if disk_size:
+        additional_disk = {
+            "initializeParams": {
+                "diskSizeGb": disk_size,
+                "diskType": f"zones/{zone}/diskTypes/pd-standard",
+            },
+            "autoDelete": True,
+            "boot": False,
+            "type": "PERSISTENT",
+        }
+        instance_config["disks"].append(additional_disk)
+
+    instance_client = compute_v1.InstancesClient()
+    request = compute_v1.InsertInstanceRequest(
+        project=project_id, 
+        zone=zone, 
+        instance_resource=compute_v1.Instance.from_json(json.dumps(instance_config))  # Convert dict to JSON string
+    )
+    operation = instance_client.insert(request=request)
+    wait_for_extended_operation(operation, "instance creation")
+    print(f"Instance '{instance_name}' created successfully in project '{project_id}' and zone '{zone}'.")
+
+
 
 
 def main():
-    json_file_path = prompt_user_input(
-        "Enter the path to the JSON configuration file (or leave blank to configure interactively):"
-    )
-    if json_file_path:
-        project_id = prompt_user_input("Enter your Google Cloud project ID:")
-        zone = prompt_user_input("Enter the zone for the instance:", "europe-west2")
-        create_instance_from_json(project_id, zone, json_file_path)
-    else:
-        create_instance_interactively()
+    try:
+        project_id = get_default_project_id()
+        print(f"Using project: {project_id}")
+
+        default_zone = get_default_zone()
+        if not default_zone:
+            zones = list_zones(project_id)
+            print("Available zones:")
+            for zone in zones:
+                print(f" - {zone}")
+            default_zone = input("Enter the zone to use: ").strip()
+        print(f"Using zone: {default_zone}")
+
+        json_file_path = input("Enter the path to the JSON configuration file (leave blank for interactive): ").strip()
+        if json_file_path:
+            with open(json_file_path, "r") as f:
+                create_instance_from_json(project_id, default_zone, f.read())
+        else:
+            create_instance_interactively(project_id, default_zone)
+
+    except DefaultCredentialsError:
+        print("Authentication failed. Please run 'gcloud auth application-default login'.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
