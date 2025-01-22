@@ -1,95 +1,179 @@
-2025-01-21 22:38
+# Lab 2 - Virtual Machines Setup and Configuration
 
-Tags: [[Cloud Systems]]
+## Table of Contents
+- [Lab 2 - Virtual Machines Setup and Configuration](#lab-2---virtual-machines-setup-and-configuration)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Running the script](#running-the-script)
+  - [Google Cloud Setup](#google-cloud-setup)
+  - [Instance Creation](#instance-creation)
+    - [Console UI Method](#console-ui-method)
+    - [Programmatic Method](#programmatic-method)
+  - [SSH Configuration](#ssh-configuration)
+    - [Quick Setup](#quick-setup)
+    - [Manual Setup](#manual-setup)
+  - [Benchmarking Tools](#benchmarking-tools)
+    - [System Information Commands](#system-information-commands)
+    - [Initial Setup](#initial-setup)
+    - [Running Benchmarks](#running-benchmarks)
+  - [Important Notes](#important-notes)
+  - [Useful Commands](#useful-commands)
+  - [References](#references)
 
-# gcloud
-[[Lab 2 Virtual Machines]]
+## Prerequisites
 
-1. [install](https://cloud.google.com/sdk/docs/install) gcloud cli tools
-	1. install it
-	2. run the install.sh script
-	3. run `gcloud init`
-2. The closest Google Cloud zone to London is `europe-west2-a`
-3. we need to make sure we have the necessary permissions (compute.admin). See section [Creating a service account key](#creating-a-service-account-key)
+- Google Cloud SDK (gcloud CLI tools) installed
+- Python environment with google-cloud-compute package
+- Access to Google Cloud Console with compute.admin permissions
+- SSH key pair for VM access
 
-### Useful commands
-* `gcloud compute instances --help`: get man for gcloud compute instances or refer to [help docs](https://cloud.google.com/compute/docs/instances/) 
-* `gcloud compute instances create`
-* `gcloud compute instances create-with-container`
-
-## Tips
-* we can always go in the "create instance console" UI and press on "<> Equivalent Code" to get the code to create it 
-<img src="tip-image.png" onerror="this.onerror=null;this.src='https://gla-my.sharepoint.com/:i:/g/personal/3059173g_student_gla_ac_uk/EX-ZLXP7GKRPhDONVf4hc7IBFzuNAAqXirjqAtsww46DQg?e=mOcGP5';" alt="Logo">
-
-
-## Managing instances with python
-for new project:
-1. create the python project
-```
-python3 -m venv venv
-```
-2. activate the venv running 
-```sh
-source venv/bin/activate  
-```
-3. pip (might be pip3 for you) install `google-cloud-compute`
-```sh
-pip install google-cloud-compute
-```
-
-for existing project:
-```sh
-pip install -r requirements.txt
-```
-
-4. run the script
-```sh
+## Running the script
+Simply run (python3 for mac):
+```python
 python manage_vm.py
 ```
 
-## Creating a service account key
-> only if no one has created an access key yet, else ask the person to give the key, simply download it and place it in the project. Make sure it's added to .gitignore
+## Google Cloud Setup
 
+1. Install the [gcloud CLI tools](https://cloud.google.com/sdk/docs/install):
+   - Download and extract the installation package
+   - Run the `install.sh` script
+   - Execute `gcloud init`
 
-### 1. Create a Service Account Key
-If a service account key has not been created yet, follow these steps to create one through the Google Cloud Console:
-1. Go to the [Google Cloud Console](https://console.cloud.google.com): 
-2. Navigate to IAM & Admin > Service Accounts.
-3. Select the project (if not selected already).
-4. **Create a Service Account**:
-	- Click **Create Service Account**.
-	- Enter a name and description for the account.
-	- Choose a role (for instance, "Owner" or "Compute Admin" to allow creation of instances).
-	- Click **Done**.
-5. Create a Key for the Service Account:
-    - Find the service account in the list and click on it.
-    - Go to the **Keys** tab.
-    - Click **Add Key** > **Create New Key**.
-    - Choose **JSON** as the key type and click **Create**.
-    - The key file will be downloaded to the computer. This is the file to be used in the Python script.
+2. Configure project settings:
+   - Default zone: `europe-west2-a` (closest to London)
+   - Ensure compute.admin permissions are granted for running instances of other projects
+   - Verify project access:
+     ```bash
+     gcloud config list --format="value(core.project)"
+     ```
 
-### 2. Path to the Service Account Key
-Once the JSON key file has been obtained, provide the path to it in the Python script.
-For example:
-- If the key file is downloaded to the **Downloads** folder, the path might look like:
-    - **Windows**: `C:\Users\<Username>\Downloads\service-account-key.json`
-    - **macOS/Linux**: `/Users/<Username>/Downloads/service-account-key.json`
+3. Tips for Instance Creation:
+   - Use the Google Cloud Console UI's "Equivalent Code" feature to generate commands
+   - Access this by clicking "<> Equivalent Code" in the instance creation interface
 
-### 3. Use the Path in the Script
-In the Python script, pass the path of the service account key to authenticate the client:
-python
-`key_path = '/path/to/the/service-account-key.json'  # Example for macOS/Linux # OR key_path = 'C:\\Users\\Username\\Downloads\\service-account-key.json'  # Example for Windows`
+## Instance Creation
 
-Ensure the correct path is provided where the key is saved on the machine.
+### Console UI Method
 
-### 4. Optional: Set the `GOOGLE_APPLICATION_CREDENTIALS` Environment Variable
-The environment variable `GOOGLE_APPLICATION_CREDENTIALS` can also be set to point to the key file. This allows Google Cloud libraries to be used without specifying the key path in the script.
+1. Navigate to the [Google Cloud Console Instance Creation page](https://console.cloud.google.com/compute/instancesAdd)
+2. Configure the following settings:
+   - Region: europe-west2 (London)
+   - Machine type: n2d-standard-2
+   - Tag: cloud-systems
+   - Storage: 100GB disk
 
-`export GOOGLE_APPLICATION_CREDENTIALS=/path/to/the/service-account-key.json`
-This way, the environment variable will be set before running the script, and there's no need to hard-code the path in the script.
+### Programmatic Method
+
+1. Set up your local environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install google-cloud-compute
+```
+
+2. Configure Google Cloud authentication:
+```bash
+gcloud auth application-default login
+gcloud config set project cs-lab2
+```
+
+3. The Python script was created following the Google Cloud documentation [here](https://cloud.google.com/compute/docs/instances/create-vm-from-instance-template) for VM creation from templates.
+
+## SSH Configuration
+
+### Quick Setup
+```bash
+gcloud compute config-ssh
+```
+
+### Manual Setup
+
+1. Generate SSH key:
+```bash
+ssh-keygen -t ed25519 -C "$(whoami)@$(hostname)"
+```
+
+2. Verify current user configuration:
+```bash
+gcloud config list --format="value(core.account)"
+```
+
+3. Add key to project metadata:
+```bash
+gcloud compute project-info add-metadata \
+--metadata ssh-keys="$(gcloud compute project-info describe \
+--format="value(commonInstanceMetadata.items.filter(key:ssh-keys).firstof(value))")
+$(whoami):$(cat ~/.ssh/id_ed25519.pub)"
+```
+
+4. Connect to VM:
+```bash
+# List available instances and their IPs
+gcloud compute instances list \
+--format=table"[box=true](name:label=NAME, networkInterfaces[].accessConfigs[].natIP.flatten():label=EXTERNAL_IP)"
+
+# Connect using SSH
+ssh $(whoami)@$VM_IP_ADDRESS
+```
+
+## Benchmarking Tools
+
+### System Information Commands
+```bash
+lscpu      # CPU information
+lsblk      # Block device information
+uname -a   # System information
+vmstat     # Virtual memory statistics
+whoami     # Current user
+hostname   # System hostname
+```
+
+### Initial Setup
+
+1. Update system packages:
+```bash
+sudo apt-get update
+```
+
+2. Install benchmarking tools:
+```bash
+sudo apt-get install sysbench
+```
+
+### Running Benchmarks
+
+Example CPU benchmark:
+```bash
+sysbench cpu --cpu-max-prime=500 --threads=1 run
+```
+
+The benchmark can be run with different thread counts (1, 2, 4) to test multi-core performance.
+
+## Important Notes
+
+- Remember to suspend VM instances when not in use
+- For new projects, ensure proper IAM permissions are configured
+- The closest Google Cloud zone to London is europe-west2-a
+
+## Useful Commands
+
+```bash
+# Basic instance management
+gcloud compute instances --help    # Access help documentation
+gcloud compute instances list      # List all instances
+gcloud compute instances create    # Create new instance
+gcloud compute instances create-with-container  # Create container-optimized instance
+gcloud compute ssh                # SSH into instance
+
+# Project configuration
+gcloud config list                # View current configuration
+gcloud config set project PROJECT_ID  # Set project
+```
 
 ## References
-[gcloud compute instances docs](https://cloud.google.com/compute/docs/instances)
 
-[machine family resource and comparison guide](https://cloud.google.com/compute/docs/machine-resource)
-
+- [Google Cloud Compute Instances Documentation](https://cloud.google.com/compute/docs/instances)
+- [Machine Family Resource Guide](https://cloud.google.com/compute/docs/machine-resource)
+- [Sysbench Documentation](https://github.com/akopytov/sysbench)
+- [Google Cloud SDK Installation Guide](https://cloud.google.com/sdk/docs/install)
