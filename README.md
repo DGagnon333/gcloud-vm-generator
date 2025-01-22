@@ -1,4 +1,5 @@
 # Lab 2 - Virtual Machines Setup and Configuration
+This script automates the process of creating a Google Compute Engine (GCE) virtual machine instance in Google Cloud.
 
 ## Table of Contents
 - [Lab 2 - Virtual Machines Setup and Configuration](#lab-2---virtual-machines-setup-and-configuration)
