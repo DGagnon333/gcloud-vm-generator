@@ -6,7 +6,6 @@ from google.api_core.extended_operation import ExtendedOperation
 from google.cloud import compute_v1
 from google.auth.exceptions import DefaultCredentialsError
 from tqdm import tqdm
-import time  # For simulating progress in this example
 
 
 def wait_for_extended_operation(
@@ -19,22 +18,33 @@ def wait_for_extended_operation(
         print(f"Warnings during {verbose_name}: {operation.warnings}", file=sys.stderr)
     return result
 
+def sanitize_instance_config(instance_config):
+    """Sanitize the instance configuration by removing unsupported fields."""
+    unsupported_fields = ['shieldedVmConfig', 'shieldedVmIntegrityPolicy']
+    for field in unsupported_fields:
+        if field in instance_config:
+            print(f"Warning: Removing unsupported field '{field}' from the configuration.")
+            del instance_config[field]
+    return instance_config
 
 def create_instance_from_json(project_id, zone, json_file_path):
     """Create an instance from a JSON configuration."""
     with open(json_file_path, "r") as f:
-        instance_config = json.load(f)  # Parse the JSON content
+        instance_config = json.load(f)
+
+    # Sanitize the instance config before passing it to the API
+    instance_config = sanitize_instance_config(instance_config)
 
     instance_client = compute_v1.InstancesClient()
     request = compute_v1.InsertInstanceRequest(
-        project=project_id,
-        zone=zone,
-        instance_resource=compute_v1.Instance.from_json(json.dumps(instance_config)),
+        project=project_id, 
+        zone=zone, 
+        instance_resource=compute_v1.Instance.from_json(json.dumps(instance_config))  # Convert dict to JSON string
     )
+    
     operation = instance_client.insert(request=request)
     wait_for_extended_operation(operation, "instance creation")
     print(f"Instance created successfully in project '{project_id}' and zone '{zone}'.")
-
 
 def get_default_project_id():
     """Retrieve the default project ID from gcloud configuration."""
@@ -43,7 +53,6 @@ def get_default_project_id():
         return check_output(["gcloud", "config", "get-value", "project"], text=True).strip()
     except Exception as e:
         raise RuntimeError("Failed to retrieve default project from gcloud.") from e
-
 
 def get_default_zone():
     """Retrieve the default zone from gcloud configuration."""
@@ -54,17 +63,14 @@ def get_default_zone():
         print("Default zone not found in gcloud configuration. Listing all zones instead.")
         return None
 
-
 def list_zones(project_id):
     """List all available zones for the given project."""
     compute_client = compute_v1.ZonesClient()
     return [zone.name for zone in compute_client.list(project=project_id)]
 
-
 def generate_default_instance_name():
     """Generate a default instance name using a GUID."""
     return f"instance-from-script-{uuid.uuid4().hex[:8]}"
-
 
 def create_instance_interactively(project_id, zone):
     """Interactively create an instance."""
@@ -115,9 +121,6 @@ def create_instance_interactively(project_id, zone):
     wait_for_extended_operation(operation, "instance creation")
     print(f"Instance '{instance_name}' created successfully in project '{project_id}' and zone '{zone}'.")
 
-
-
-
 def main():
     try:
         project_id = get_default_project_id()
@@ -134,8 +137,7 @@ def main():
 
         json_file_path = input("Enter the path to the JSON configuration file (leave blank for interactive): ").strip()
         if json_file_path:
-            with open(json_file_path, "r") as f:
-                create_instance_from_json(project_id, default_zone, f.read())
+            create_instance_from_json(project_id, default_zone, json_file_path)
         else:
             create_instance_interactively(project_id, default_zone)
 
@@ -143,7 +145,6 @@ def main():
         print("Authentication failed. Please run 'gcloud auth application-default login'.")
     except Exception as e:
         print(f"An error occurred: {e}")
-
 
 if __name__ == "__main__":
     main()
